@@ -1,0 +1,60 @@
+import numpy as np
+import scipy.stats as st
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+np.random.seed(43)
+
+
+def generate_data(n_users: int = 10 ** 3) -> np.ndarray:
+    revenue = np.random.uniform(10, 300, n_users)
+    return revenue
+
+def add_outliers_to_data(
+    data: np.ndarray,
+    outliers_min: int = 300,
+    outliers_max: int = 400,
+    outliers_n: int = 10,
+) -> np.ndarray:
+    outliers_revenue = np.random.uniform(outliers_min, outliers_max, outliers_n)
+    data = np.insert(data, 1, outliers_revenue)
+
+    return data
+
+
+data_a = generate_data()
+data_b = generate_data()
+
+data_b = add_outliers_to_data(
+    data_b, outliers_min=500, outliers_max=900, outliers_n=100
+)
+data_a = add_outliers_to_data(data_a, outliers_min=500, outliers_max=600, outliers_n=50)
+data_a = add_outliers_to_data(
+    data_a, outliers_min=1100, outliers_max=1200, outliers_n=10
+)
+
+
+thresholds = []
+threshold_candidates = [400, 600, 900]
+
+for threshold in threshold_candidates:
+    data_a_cut = data_a[data_a < threshold]
+    data_b_cut = data_b[data_b < threshold]
+    p_value = st.ttest_ind(data_a_cut, data_b_cut)[1]
+
+    print(f"Threshold: {threshold}, p-value: {p_value:.3f}")
+    print(f"Number of users cut: {len(data_a) - len(data_a_cut)}")
+    thresholds.append(threshold)
+    print(
+        f"diff between groups {round(sum(data_a[data_a < threshold]) - sum(data_b[data_b < threshold]))}"
+    )
+
+
+sns.boxplot(data=[data_a, data_b])
+
+for threshold in thresholds:
+    plt.plot([-0.5, 1.5], [threshold, threshold], color="red", linestyle="--")
+plt.xlabel("Group")
+plt.ylabel("Revenue")
+plt.title("Revenue distribution")
+plt.show()
