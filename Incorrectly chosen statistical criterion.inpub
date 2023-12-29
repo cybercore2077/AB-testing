@@ -1,0 +1,23 @@
+import numpy as np
+import scipy.stats as sps
+from tqdm import trange
+
+t_pvals = []
+mw_pvals = []
+
+n_interaitons = 1000
+for i in trange(n_interaitons):
+    control = np.random.normal(1000, 1, size=100)
+    test = np.random.normal(1000, 100, size=100)
+
+    t_stat, t_pval = sps.ttest_ind(control, test)
+    t_pvals.append(t_pval)
+
+    mw_u, mw_pval = sps.mannwhitneyu(control, test)
+    mw_pvals.append(mw_pval)
+
+num_sig_t = sum(p < 0.05 for p in t_pvals)
+num_sig_mw = sum(p < 0.05 for p in mw_pvals)
+
+print(f"Number of significant p-values from t-test: {num_sig_t/n_interaitons:.3f}")
+print(f"Number of significant p-values from MW U test: {num_sig_mw/n_interaitons:.3f}")
