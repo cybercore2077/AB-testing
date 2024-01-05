@@ -1,0 +1,35 @@
+import numpy as np
+import pandas as pd
+import scipy.stats as st
+
+
+def generate_data(n_users: int) -> pd.DataFrame:
+    user_ids = np.arange(n_users)
+    data = pd.DataFrame(user_ids, columns=["user_id"])
+    data = pd.concat(
+        [
+            data,
+            pd.DataFrame(
+                np.random.normal(100, 10, size=n_users)
+                + (10**6) * np.random.binomial(1, 0.001, size=n_users),
+                columns=["metric"],
+                index=data.index,
+            ),
+        ],
+        axis=1,
+    )
+    data = data.set_index("user_id")
+    return data
+
+
+significance = 0
+n_tests = 1000
+
+for i in range(n_tests):
+    data_a = generate_data(n_users=10**5)
+    data_b = generate_data(n_users=100)
+    p_value = st.ttest_ind(data_a["metric"], data_b["metric"])[1]
+    if p_value < 0.05:
+        significance += 1
+
+print(f"AA test false positive rate: {significance/n_tests*100:.1f}%")
